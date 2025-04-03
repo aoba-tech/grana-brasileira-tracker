@@ -1,5 +1,6 @@
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { getCurrentMigrationVersion, runMigrations } from './migrations';
 
 interface FinanceDB extends DBSchema {
   categories: {
@@ -63,50 +64,63 @@ let db: IDBPDatabase<FinanceDB> | null = null;
 export async function initDB() {
   if (db) return db;
 
-  db = await openDB<FinanceDB>('finance-app-db', 1, {
-    upgrade(db) {
-      // Create object stores
-      const categoryStore = db.createObjectStore('categories', { keyPath: 'id', autoIncrement: true });
-      categoryStore.createIndex('by-name', 'name');
+  const dbName = 'finance-app-db';
+  const currentVersion = getCurrentMigrationVersion();
 
-      const transactionStore = db.createObjectStore('transactions', { keyPath: 'id', autoIncrement: true });
-      transactionStore.createIndex('by-date', 'date');
-      transactionStore.createIndex('by-category', 'categoryId');
-      transactionStore.createIndex('by-account', 'accountId');
+  db = await openDB<FinanceDB>(dbName, currentVersion, {
+    upgrade(db, oldVersion, newVersion, transaction) {
+      console.log(`Upgrading database from version ${oldVersion} to ${newVersion}`);
+      
+      // Initial setup for version 1
+      if (oldVersion < 1) {
+        // Create object stores
+        const categoryStore = db.createObjectStore('categories', { keyPath: 'id', autoIncrement: true });
+        categoryStore.createIndex('by-name', 'name');
 
-      const accountStore = db.createObjectStore('accounts', { keyPath: 'id', autoIncrement: true });
-      accountStore.createIndex('by-name', 'name');
+        const transactionStore = db.createObjectStore('transactions', { keyPath: 'id', autoIncrement: true });
+        transactionStore.createIndex('by-date', 'date');
+        transactionStore.createIndex('by-category', 'categoryId');
+        transactionStore.createIndex('by-account', 'accountId');
 
-      const budgetStore = db.createObjectStore('budgets', { keyPath: 'id', autoIncrement: true });
-      budgetStore.createIndex('by-category', 'categoryId');
-      budgetStore.createIndex('by-period', 'period');
+        const accountStore = db.createObjectStore('accounts', { keyPath: 'id', autoIncrement: true });
+        accountStore.createIndex('by-name', 'name');
 
-      // Pre-populate with default categories
-      const defaultCategories = [
-        { name: 'Alimentação', color: '#00A86B', icon: 'utensils', type: 'expense' as const, createdAt: new Date() },
-        { name: 'Transporte', color: '#1A73E8', icon: 'car', type: 'expense' as const, createdAt: new Date() },
-        { name: 'Moradia', color: '#FFC107', icon: 'home', type: 'expense' as const, createdAt: new Date() },
-        { name: 'Lazer', color: '#6200EA', icon: 'film', type: 'expense' as const, createdAt: new Date() },
-        { name: 'Saúde', color: '#E53935', icon: 'heart', type: 'expense' as const, createdAt: new Date() },
-        { name: 'Salário', color: '#00A86B', icon: 'wallet', type: 'income' as const, createdAt: new Date() },
-        { name: 'Investimentos', color: '#1A73E8', icon: 'trending-up', type: 'income' as const, createdAt: new Date() },
-      ];
+        const budgetStore = db.createObjectStore('budgets', { keyPath: 'id', autoIncrement: true });
+        budgetStore.createIndex('by-category', 'categoryId');
+        budgetStore.createIndex('by-period', 'period');
 
-      for (const category of defaultCategories) {
-        categoryStore.add(category);
+        // Pre-populate with default categories
+        const defaultCategories = [
+          { name: 'Alimentação', color: '#00A86B', icon: 'utensils', type: 'expense' as const, createdAt: new Date() },
+          { name: 'Transporte', color: '#1A73E8', icon: 'car', type: 'expense' as const, createdAt: new Date() },
+          { name: 'Moradia', color: '#FFC107', icon: 'home', type: 'expense' as const, createdAt: new Date() },
+          { name: 'Lazer', color: '#6200EA', icon: 'film', type: 'expense' as const, createdAt: new Date() },
+          { name: 'Saúde', color: '#E53935', icon: 'heart', type: 'expense' as const, createdAt: new Date() },
+          { name: 'Salário', color: '#00A86B', icon: 'wallet', type: 'income' as const, createdAt: new Date() },
+          { name: 'Investimentos', color: '#1A73E8', icon: 'trending-up', type: 'income' as const, createdAt: new Date() },
+        ];
+
+        for (const category of defaultCategories) {
+          categoryStore.add(category);
+        }
+
+        // Add default account
+        accountStore.add({
+          name: 'Conta Principal',
+          type: 'checking',
+          balance: 0,
+          color: '#00A86B',
+          icon: 'credit-card',
+          createdAt: new Date()
+        });
       }
-
-      // Add default account
-      accountStore.add({
-        name: 'Conta Principal',
-        type: 'checking',
-        balance: 0,
-        color: '#00A86B',
-        icon: 'credit-card',
-        createdAt: new Date()
-      });
+      
+      // Additional upgrade logic for future versions would go here
     },
   });
+
+  // Run any pending migrations
+  await runMigrations(dbName, db.version);
 
   return db;
 }
