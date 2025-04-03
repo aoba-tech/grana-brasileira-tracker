@@ -1,10 +1,7 @@
 
-import { IDBFactory } from 'fake-indexeddb';
-import { IDBOpenDBRequest } from 'fake-indexeddb/lib/FDBOpenDBRequest';
-import FDBDatabase from 'fake-indexeddb/lib/FDBDatabase';
-import { FinanceDB, initDB, getDB } from '@/lib/db';
-
-let mockIndexedDB: IDBFactory;
+import FDBFactory from 'fake-indexeddb/lib/FDBFactory';
+import { initDB, getDB } from '@/lib/db';
+import type { FinanceDB } from '@/lib/db';
 
 /**
  * Sets up an in-memory test database
@@ -13,12 +10,11 @@ export async function setupTestDB() {
   // Save the original IndexedDB implementation
   const originalIndexedDB = global.indexedDB;
   
-  // Import fake-indexeddb dynamically to avoid import errors in the browser
-  const { default: FDBFactory } = await import('fake-indexeddb');
-  mockIndexedDB = new FDBFactory();
+  // Create new fake IndexedDB
+  const mockIndexedDB = new FDBFactory();
   
   // Replace the global indexedDB with the mock
-  global.indexedDB = mockIndexedDB;
+  global.indexedDB = mockIndexedDB as unknown as IDBFactory;
   
   // Clear any existing connections
   await initDB();

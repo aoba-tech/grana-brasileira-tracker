@@ -1,11 +1,11 @@
 
-import { openDB } from 'idb';
+import { openDB, IDBPDatabase } from 'idb';
 import { toast } from '@/lib/toast';
 
 interface Migration {
   version: number;
   description: string;
-  migrate: (db: IDBPDatabase) => Promise<void>;
+  migrate: (db: IDBPDatabase<any>) => Promise<void>;
 }
 
 const migrations: Migration[] = [

@@ -1,12 +1,11 @@
 
-import { expect, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { expect, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom';
 
 // Cleanup after each test
 afterEach(() => {
-  cleanup();
+  // Cleanup logic
 });
 
 // Configure global timeout for tests
-setTimeout(10000);
+vi.setConfig({ testTimeout: 10000 });
