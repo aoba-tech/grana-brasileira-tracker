@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { 
   initDB, getCategories, getTransactions, getAccounts, getBudgets,
@@ -10,9 +9,8 @@ import {
   getMonthlyExpenses, getMonthlyIncome
 } from '@/lib/db';
 import { formatISO } from 'date-fns';
-import { toast } from '@/components/ui/sonner';
+import { toast } from '@/lib/toast';
 
-// Define the context type
 type FinanceContextType = {
   categories: any[];
   transactions: any[];
@@ -24,7 +22,6 @@ type FinanceContextType = {
   budgetStatus: any[];
   currentMonth: Date;
   
-  // CRUD functions
   addTransaction: (transaction: any) => Promise<number>;
   updateTransaction: (transaction: any) => Promise<number>;
   deleteTransaction: (id: number) => Promise<void>;
@@ -41,7 +38,6 @@ type FinanceContextType = {
   updateBudget: (budget: any) => Promise<number>;
   deleteBudget: (id: number) => Promise<void>;
   
-  // Helper functions
   setCurrentMonth: (date: Date) => void;
   refreshData: () => Promise<void>;
   monthlyExpenses: any[];
@@ -63,7 +59,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
   const [monthlyIncome, setMonthlyIncome] = useState<any[]>([]);
 
-  // Initialize database and load initial data
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -80,7 +75,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     initialize();
   }, []);
 
-  // Update data when the month changes
   useEffect(() => {
     if (!loading) {
       updateMonthlyData();
@@ -127,10 +121,8 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  // Wrap database functions with state updates
   const addTransactionWithUpdate = async (transaction: any) => {
     try {
-      // Format date to ISO string if it's a Date object
       const formattedTransaction = {
         ...transaction,
         date: transaction.date instanceof Date 
@@ -151,7 +143,6 @@ export const FinanceProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const updateTransactionWithUpdate = async (transaction: any) => {
     try {
-      // Format date to ISO string if it's a Date object
       const formattedTransaction = {
         ...transaction,
         date: transaction.date instanceof Date 
