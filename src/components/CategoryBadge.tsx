@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
-import * as Icons from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 
 interface CategoryBadgeProps {
   category: {
@@ -16,7 +16,9 @@ interface CategoryBadgeProps {
 
 const CategoryBadge = ({ category, className }: CategoryBadgeProps) => {
   // Get icon component from string name
-  const IconComponent = (Icons as Record<string, LucideIcon>)[category.icon] || Icons.Tag;
+  // Cast to unknown first to avoid TypeScript errors
+  const iconMap = LucideIcons as unknown as Record<string, LucideIcon>;
+  const IconComponent = iconMap[category.icon] || LucideIcons.Tag;
 
   return (
     <Badge

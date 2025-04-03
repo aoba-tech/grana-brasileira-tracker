@@ -83,13 +83,13 @@ export async function initDB() {
 
       // Pre-populate with default categories
       const defaultCategories = [
-        { name: 'Alimentação', color: '#00A86B', icon: 'utensils', type: 'expense', createdAt: new Date() },
-        { name: 'Transporte', color: '#1A73E8', icon: 'car', type: 'expense', createdAt: new Date() },
-        { name: 'Moradia', color: '#FFC107', icon: 'home', type: 'expense', createdAt: new Date() },
-        { name: 'Lazer', color: '#6200EA', icon: 'film', type: 'expense', createdAt: new Date() },
-        { name: 'Saúde', color: '#E53935', icon: 'heart', type: 'expense', createdAt: new Date() },
-        { name: 'Salário', color: '#00A86B', icon: 'wallet', type: 'income', createdAt: new Date() },
-        { name: 'Investimentos', color: '#1A73E8', icon: 'trending-up', type: 'income', createdAt: new Date() },
+        { name: 'Alimentação', color: '#00A86B', icon: 'utensils', type: 'expense' as const, createdAt: new Date() },
+        { name: 'Transporte', color: '#1A73E8', icon: 'car', type: 'expense' as const, createdAt: new Date() },
+        { name: 'Moradia', color: '#FFC107', icon: 'home', type: 'expense' as const, createdAt: new Date() },
+        { name: 'Lazer', color: '#6200EA', icon: 'film', type: 'expense' as const, createdAt: new Date() },
+        { name: 'Saúde', color: '#E53935', icon: 'heart', type: 'expense' as const, createdAt: new Date() },
+        { name: 'Salário', color: '#00A86B', icon: 'wallet', type: 'income' as const, createdAt: new Date() },
+        { name: 'Investimentos', color: '#1A73E8', icon: 'trending-up', type: 'income' as const, createdAt: new Date() },
       ];
 
       for (const category of defaultCategories) {
