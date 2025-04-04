@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { Wallet, TrendingUp, TrendingDown, Plus, DollarSign, BanknoteIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { addMonths, subMonths } from 'date-fns';
+import TransactionForm from '@/components/TransactionForm';
 
 const Dashboard = () => {
   const { 
@@ -22,6 +22,9 @@ const Dashboard = () => {
     budgetStatus,
     categories
   } = useFinance();
+  
+  // Add state for transaction dialog
+  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   
   // Calculate total income and expenses for the month
   const totalMonthlyExpenses = monthlyExpenses.reduce((sum, t) => sum + t.amount, 0);
@@ -59,7 +62,7 @@ const Dashboard = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Button className="hidden sm:flex">
+        <Button className="hidden sm:flex" onClick={() => setIsTransactionFormOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nova Transação
         </Button>
@@ -326,6 +329,12 @@ const Dashboard = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Transaction Form */}
+      <TransactionForm 
+        isOpen={isTransactionFormOpen} 
+        onOpenChange={setIsTransactionFormOpen} 
+      />
     </div>
   );
 };
