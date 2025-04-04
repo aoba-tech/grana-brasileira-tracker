@@ -9,7 +9,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/setupTests.ts'],
+    setupFiles: [
+      './src/setupTests.ts',
+      './src/tests/setup-fetch-mock.ts'
+    ],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: ['node_modules/', 'src/setupTests.ts']

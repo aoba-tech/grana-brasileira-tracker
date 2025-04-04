@@ -27,9 +27,11 @@ import {
   ArrowDownRight,
   Trash2,
   Edit,
-  Filter
+  Filter,
+  FileInput
 } from 'lucide-react';
 import TransactionForm from '@/components/TransactionForm';
+import ImportTransactionDialog from '@/components/ImportTransactionDialog';
 
 const Transactions = () => {
   const { 
@@ -40,6 +42,7 @@ const Transactions = () => {
   
   // State for the transaction form
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -76,14 +79,25 @@ const Transactions = () => {
     }
   };
   
+  // Open import dialog
+  const handleImportClick = () => {
+    setIsImportDialogOpen(true);
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transações</h1>
-        <Button onClick={handleAddClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Transação
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleImportClick}>
+            <FileInput className="mr-2 h-4 w-4" />
+            Importar OFX
+          </Button>
+          <Button onClick={handleAddClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Transação
+          </Button>
+        </div>
       </div>
       
       {/* Search and filters */}
@@ -191,6 +205,12 @@ const Transactions = () => {
         isOpen={isTransactionFormOpen} 
         onOpenChange={setIsTransactionFormOpen} 
         editTransaction={editingTransaction} 
+      />
+      
+      {/* Import Dialog */}
+      <ImportTransactionDialog
+        isOpen={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
       />
     </div>
   );
