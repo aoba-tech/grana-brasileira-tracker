@@ -2,6 +2,7 @@
 import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/locale';
 
 interface CurrencyInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -34,13 +35,6 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       internalValueRef.current = initialValue;
       setDisplayValue(formatCurrency(initialValue));
     }, [value, defaultValue]);
-
-    const formatCurrency = (value: number): string => {
-      return value.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-      });
-    };
 
     const parseCurrency = (value: string): number => {
       return parseFloat(value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;

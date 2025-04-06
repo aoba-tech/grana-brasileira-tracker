@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { 
   Dialog,
@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { formatDateForInput } from '@/lib/locale';
 
 interface TransactionFormProps {
   isOpen: boolean;
@@ -43,21 +44,21 @@ const TransactionForm = ({ isOpen, onOpenChange, editTransaction }: TransactionF
     description: editTransaction?.description || '',
     amount: editTransaction?.amount || 0,
     type: editTransaction?.type || 'expense',
-    date: editTransaction ? new Date(editTransaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    date: editTransaction ? formatDateForInput(new Date(editTransaction.date)) : formatDateForInput(new Date()),
     categoryId: editTransaction?.categoryId || 0,
     accountId: editTransaction?.accountId || 0,
     notes: editTransaction?.notes || ''
   });
   
   // Reset form when dialog opens/closes or edit transaction changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setFormData({
         id: editTransaction?.id || 0,
         description: editTransaction?.description || '',
         amount: editTransaction?.amount || 0,
         type: editTransaction?.type || 'expense',
-        date: editTransaction ? new Date(editTransaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        date: editTransaction ? formatDateForInput(new Date(editTransaction.date)) : formatDateForInput(new Date()),
         categoryId: editTransaction?.categoryId || 0,
         accountId: editTransaction?.accountId || 0,
         notes: editTransaction?.notes || ''

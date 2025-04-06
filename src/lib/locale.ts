@@ -65,3 +65,17 @@ export const formatPercentage = (value: number): string => {
 export const formatNumber = (value: number): string => {
   return new Intl.NumberFormat('pt-BR').format(value);
 };
+
+// Format date for input fields (yyyy-MM-dd)
+export const formatDateForInput = (date: Date | string): string => {
+  if (!date) return '';
+  
+  const dateObj = isDate(date) ? date : new Date(date);
+  return format(dateObj, 'yyyy-MM-dd');
+};
+
+// Parse date from input format
+export const parseDateFromInput = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
