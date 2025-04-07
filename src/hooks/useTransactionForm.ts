@@ -69,6 +69,11 @@ export const useTransactionForm = ({
     setFormData(prev => ({ ...prev, amount: value }));
   };
 
+  // Handle date change from calendar
+  const handleDateChange = (date: Date) => {
+    setFormData(prev => ({ ...prev, date: formatDateForInput(date) }));
+  };
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +90,7 @@ export const useTransactionForm = ({
     handleInputChange,
     handleSelectChange,
     handleAmountChange,
+    handleDateChange,
     handleSubmit
   };
 };

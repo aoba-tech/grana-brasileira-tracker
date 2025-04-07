@@ -79,3 +79,17 @@ export const parseDateFromInput = (dateString: string): Date => {
   const [year, month, day] = dateString.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
+
+// Parse currency string to number
+export const parseCurrencyToNumber = (value: string): number => {
+  if (!value) return 0;
+  return parseFloat(value.replace(/[^\d,-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+};
+
+// Format currency without currency symbol
+export const formatCurrencyRaw = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};

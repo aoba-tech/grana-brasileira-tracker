@@ -10,6 +10,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface TransactionFormFieldsProps {
   formData: {
@@ -24,6 +31,7 @@ interface TransactionFormFieldsProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleAmountChange: (value: number) => void;
+  handleDateChange: (date: Date) => void;
   categories: any[];
   accounts: any[];
 }
@@ -33,9 +41,12 @@ const TransactionFormFields: React.FC<TransactionFormFieldsProps> = ({
   handleInputChange,
   handleSelectChange,
   handleAmountChange,
+  handleDateChange,
   categories,
   accounts
 }) => {
+  const selectedDate = formData.date ? new Date(formData.date) : new Date();
+
   return (
     <div className="grid gap-4 py-4">
       <div className="grid gap-2">
@@ -78,14 +89,31 @@ const TransactionFormFields: React.FC<TransactionFormFieldsProps> = ({
       
       <div className="grid gap-2">
         <Label htmlFor="date">Data</Label>
-        <Input
-          id="date"
-          name="date"
-          type="date"
-          value={formData.date}
-          onChange={handleInputChange}
-          required
-        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !formData.date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {formData.date ? format(new Date(formData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : <span>Selecione uma data</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && handleDateChange(date)}
+              initialFocus
+              locale={ptBR}
+              className="pointer-events-auto p-3"
+            />
+          </PopoverContent>
+        </Popover>
       </div>
       
       <div className="grid gap-2">

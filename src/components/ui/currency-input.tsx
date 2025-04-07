@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/locale';
+import { formatCurrency, parseCurrencyToNumber, formatCurrencyRaw } from '@/lib/locale';
 
 interface CurrencyInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -19,14 +18,14 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       let initialValue = 0;
       if (defaultValue !== undefined) {
         initialValue = typeof defaultValue === 'string' 
-          ? parseFloat(defaultValue) || 0 
+          ? parseCurrencyToNumber(defaultValue) || 0 
           : typeof defaultValue === 'number' 
             ? defaultValue 
             : 0;
       }
       if (value !== undefined) {
         initialValue = typeof value === 'string' 
-          ? parseFloat(value) || 0 
+          ? parseCurrencyToNumber(value) || 0 
           : typeof value === 'number' 
             ? value 
             : 0;
@@ -36,15 +35,14 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       setDisplayValue(formatCurrency(initialValue));
     }, [value, defaultValue]);
 
-    const parseCurrency = (value: string): number => {
-      return parseFloat(value.replace(/[^\d,-]/g, '').replace(',', '.')) || 0;
-    };
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let input = e.target.value;
       
-      // Remove all non-numeric characters except commas
-      input = input.replace(/[^\d,]/g, '');
+      // Remove all non-numeric characters except commas and dots
+      input = input.replace(/[^\d,.]/g, '');
+      
+      // Replace all dots with empty string (keeping only commas for decimal separator)
+      input = input.replace(/\./g, '');
       
       // Ensure only one comma
       const commaCount = (input.match(/,/g) || []).length;
@@ -53,7 +51,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         input = input.substring(0, lastCommaIndex) + input.substring(lastCommaIndex).replace(/,/g, '');
       }
       
-      const numericValue = parseCurrency(input);
+      const numericValue = parseCurrencyToNumber(input);
       internalValueRef.current = numericValue;
       
       // Format and display the value
@@ -72,10 +70,12 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       // On focus, strip the currency symbol and formatting for easier editing
-      const strippedValue = internalValueRef.current.toString().replace('.', ',');
-      setDisplayValue(strippedValue === '0' ? '' : strippedValue);
+      const strippedValue = formatCurrencyRaw(internalValueRef.current);
+      setDisplayValue(strippedValue === '0,00' ? '' : strippedValue);
       // Place cursor at the end
-      e.target.setSelectionRange(displayValue.length, displayValue.length);
+      setTimeout(() => {
+        e.target.setSelectionRange(displayValue.length, displayValue.length);
+      }, 0);
     };
 
     return (

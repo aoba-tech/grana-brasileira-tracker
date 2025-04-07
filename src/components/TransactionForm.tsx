@@ -43,6 +43,7 @@ const TransactionForm = ({ isOpen, onOpenChange, editTransaction }: TransactionF
     handleInputChange,
     handleSelectChange,
     handleAmountChange,
+    handleDateChange,
     handleSubmit
   } = useTransactionForm({ isOpen, editTransaction, onSubmit });
   
@@ -61,6 +62,7 @@ const TransactionForm = ({ isOpen, onOpenChange, editTransaction }: TransactionF
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChange}
             handleAmountChange={handleAmountChange}
+            handleDateChange={handleDateChange}
             categories={categories}
             accounts={accounts}
           />
