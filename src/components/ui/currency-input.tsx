@@ -1,7 +1,7 @@
 import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { formatCurrency, parseCurrencyToNumber, formatCurrencyRaw } from '@/lib/locale';
+import { formatCurrency, parseCurrencyToNumber } from '@/lib/locale';
 
 interface CurrencyInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -32,14 +32,11 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       }
       
       internalValueRef.current = initialValue;
-      setDisplayValue(formatCurrency(initialValue));
+      setDisplayValue(initialValue.toString().replace('.', ','));
     }, [value, defaultValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let input = e.target.value;
-      
-      // Remove currency symbol and spaces
-      input = input.replace(/R\$\s?/g, '');
       
       // Keep only digits, comma and dot
       input = input.replace(/[^\d,.]/g, '');
@@ -61,8 +58,8 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         }
       }
       
-      // Format for display
-      setDisplayValue(input ? `R$ ${input}` : '');
+      // Display the value without currency symbol
+      setDisplayValue(input);
       
       // Parse to number for storing
       const numericValue = parseCurrencyToNumber(input);
@@ -75,20 +72,27 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     };
 
     const handleBlur = () => {
-      // Format the value on blur for consistent display
-      setDisplayValue(formatCurrency(internalValueRef.current));
+      // On blur, ensure the value is properly formatted with comma as decimal separator
+      // but don't add currency symbol
+      const value = internalValueRef.current;
+      const formattedValue = value.toString().replace('.', ',');
+      
+      // If there's no decimal part, add it
+      if (!formattedValue.includes(',')) {
+        setDisplayValue(`${formattedValue},00`);
+      } else {
+        // Ensure proper decimal places
+        const [whole, decimal] = formattedValue.split(',');
+        if (decimal.length === 1) {
+          setDisplayValue(`${whole},${decimal}0`);
+        } else {
+          setDisplayValue(formattedValue);
+        }
+      }
     };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      // On focus, strip the currency symbol for easier editing
-      // But keep the formatted number with comma
-      const rawValue = internalValueRef.current === 0 ? '' : formatCurrencyRaw(internalValueRef.current);
-      setDisplayValue(rawValue === '0,00' ? '' : rawValue);
-      
-      // Place cursor at the end
-      setTimeout(() => {
-        e.target.setSelectionRange(displayValue.length, displayValue.length);
-      }, 0);
+      // Do nothing special on focus, keep the current display value
     };
 
     return (
