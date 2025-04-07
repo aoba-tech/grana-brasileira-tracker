@@ -83,7 +83,10 @@ export const parseDateFromInput = (dateString: string): Date => {
 // Parse currency string to number
 export const parseCurrencyToNumber = (value: string): number => {
   if (!value) return 0;
-  return parseFloat(value.replace(/[^\d,-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+  
+  // Replace all dots (thousand separators in pt-BR) and convert comma to dot for JS parsing
+  const cleanValue = value.replace(/\./g, '').replace(',', '.');
+  return parseFloat(cleanValue) || 0;
 };
 
 // Format currency without currency symbol

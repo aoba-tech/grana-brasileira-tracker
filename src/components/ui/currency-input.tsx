@@ -38,24 +38,35 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let input = e.target.value;
       
-      // Remove all non-numeric characters except commas and dots
+      // Remove currency symbol and spaces
+      input = input.replace(/R\$\s?/g, '');
+      
+      // Keep only digits, comma and dot
       input = input.replace(/[^\d,.]/g, '');
       
-      // Replace all dots with empty string (keeping only commas for decimal separator)
-      input = input.replace(/\./g, '');
-      
-      // Ensure only one comma
-      const commaCount = (input.match(/,/g) || []).length;
-      if (commaCount > 1) {
-        const lastCommaIndex = input.lastIndexOf(',');
-        input = input.substring(0, lastCommaIndex) + input.substring(lastCommaIndex).replace(/,/g, '');
+      // Handle when user types a comma or dot
+      if ((input.match(/,/g) || []).length > 1) {
+        const parts = input.split(',');
+        input = parts[0] + ',' + parts.slice(1).join('');
       }
       
+      if ((input.match(/\./g) || []).length > 0) {
+        // Convert dot to comma (Brazilian format)
+        input = input.replace(/\./g, ',');
+        
+        // Ensure only one comma
+        if ((input.match(/,/g) || []).length > 1) {
+          const parts = input.split(',');
+          input = parts[0] + ',' + parts.slice(1).join('');
+        }
+      }
+      
+      // Format for display
+      setDisplayValue(input ? `R$ ${input}` : '');
+      
+      // Parse to number for storing
       const numericValue = parseCurrencyToNumber(input);
       internalValueRef.current = numericValue;
-      
-      // Format and display the value
-      setDisplayValue(input ? `R$ ${input}` : '');
       
       // Call the onValueChange callback with the numeric value
       if (onValueChange) {
@@ -69,9 +80,11 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      // On focus, strip the currency symbol and formatting for easier editing
-      const strippedValue = formatCurrencyRaw(internalValueRef.current);
-      setDisplayValue(strippedValue === '0,00' ? '' : strippedValue);
+      // On focus, strip the currency symbol for easier editing
+      // But keep the formatted number with comma
+      const rawValue = internalValueRef.current === 0 ? '' : formatCurrencyRaw(internalValueRef.current);
+      setDisplayValue(rawValue === '0,00' ? '' : rawValue);
+      
       // Place cursor at the end
       setTimeout(() => {
         e.target.setSelectionRange(displayValue.length, displayValue.length);
