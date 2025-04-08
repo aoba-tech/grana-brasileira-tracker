@@ -1,7 +1,7 @@
 
 import { parseOfxContent, convertOfxToTransaction, OfxTransaction } from './ofx-parser';
 import { addTransaction } from '../db';
-import { toast } from '../toast';
+import { toast } from '../lib/toast';
 
 interface ImportResult {
   success: boolean;
@@ -72,12 +72,19 @@ export const FileImportService = {
   async ensureUtf8Encoding(content: string): Promise<string> {
     // Check for encoding declarations in the OFX header
     const encodingMatch = content.match(/ENCODING="([^"]+)"/i);
+    const charsetMatch = content.match(/CHARSET="([^"]+)"/i);
+    
     const declaredEncoding = encodingMatch ? encodingMatch[1].toUpperCase() : null;
+    const declaredCharset = charsetMatch ? charsetMatch[1].toUpperCase() : null;
     
     // If it's already UTF-8 or no encoding is specified, return as-is
-    if (!declaredEncoding || declaredEncoding === 'UTF-8') {
+    if ((!declaredEncoding && !declaredCharset) || 
+        declaredEncoding === 'UTF-8' || 
+        declaredCharset === 'UTF-8') {
       return content;
     }
+    
+    console.log(`OFX file has encoding: ${declaredEncoding}, charset: ${declaredCharset}`);
     
     // For special characters common in Portuguese
     try {
@@ -104,7 +111,16 @@ export const FileImportService = {
         .replace(/\xE0/g, 'à')
         .replace(/\xF9/g, 'ù')
         .replace(/\xF5/g, 'õ')
-        .replace(/\xD5/g, 'Õ');
+        .replace(/\xD5/g, 'Õ')
+        // ISO-8859-1 specific mappings for other common characters
+        .replace(/\xE2/g, 'â')
+        .replace(/\xC2/g, 'Â')
+        .replace(/\xEE/g, 'î')
+        .replace(/\xCE/g, 'Î')
+        .replace(/\xF2/g, 'ò')
+        .replace(/\xD2/g, 'Ò')
+        .replace(/\xFC/g, 'ü')
+        .replace(/\xDC/g, 'Ü');
     } catch (error) {
       console.warn('Encoding conversion failed, using content as-is:', error);
     }

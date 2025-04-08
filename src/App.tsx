@@ -11,6 +11,7 @@ import Transactions from "@/pages/Transactions";
 import Accounts from "@/pages/Accounts";
 import Budgets from "@/pages/Budgets";
 import Reports from "@/pages/Reports";
+import Categories from "@/pages/Categories";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,14 @@ const App = () => (
               element={
                 <AppLayout>
                   <Accounts />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <AppLayout>
+                  <Categories />
                 </AppLayout>
               }
             />
