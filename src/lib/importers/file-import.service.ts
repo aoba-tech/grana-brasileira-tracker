@@ -1,7 +1,7 @@
 
 import { parseOfxContent, convertOfxToTransaction, OfxTransaction } from './ofx-parser';
 import { addTransaction } from '../db';
-import { toast } from '../lib/toast';
+import { toast } from '../../lib/toast';
 
 interface ImportResult {
   success: boolean;
