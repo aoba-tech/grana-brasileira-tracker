@@ -61,7 +61,10 @@ export const useTransactionForm = ({
 
   // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === 'categoryId' || name === 'accountId' ? parseInt(value, 10) : value 
+    }));
   };
 
   // Handle amount change from currency input

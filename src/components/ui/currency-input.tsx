@@ -1,7 +1,7 @@
 import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { formatCurrency, parseCurrencyToNumber } from '@/lib/locale';
+import { parseCurrencyToNumber } from '@/lib/locale';
 
 interface CurrencyInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -32,7 +32,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       }
       
       internalValueRef.current = initialValue;
-      setDisplayValue(initialValue.toString().replace('.', ','));
+      setDisplayValue(initialValue === 0 ? '' : initialValue.toString().replace('.', ','));
     }, [value, defaultValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +58,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         }
       }
       
-      // Display the value without currency symbol
+      // Display the value without any formatting
       setDisplayValue(input);
       
       // Parse to number for storing
@@ -72,9 +72,14 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
     };
 
     const handleBlur = () => {
-      // On blur, ensure the value is properly formatted with comma as decimal separator
-      // but don't add currency symbol
+      // On blur, ensure proper decimal format but add no currency symbol
       const value = internalValueRef.current;
+      
+      if (value === 0) {
+        setDisplayValue('');
+        return;
+      }
+      
       const formattedValue = value.toString().replace('.', ',');
       
       // If there's no decimal part, add it
@@ -85,6 +90,8 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         const [whole, decimal] = formattedValue.split(',');
         if (decimal.length === 1) {
           setDisplayValue(`${whole},${decimal}0`);
+        } else if (decimal.length > 2) {
+          setDisplayValue(`${whole},${decimal.substring(0, 2)}`);
         } else {
           setDisplayValue(formattedValue);
         }
