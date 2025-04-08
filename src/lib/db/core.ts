@@ -6,6 +6,7 @@ import { getCurrentMigrationVersion, runMigrations } from '../migrations';
 let db: IDBPDatabase<FinanceDB> | null = null;
 
 export const DB_NAME = 'finance-app-db';
+export const DEFAULT_CATEGORY_ID = 1; // ID for "Sem Categoria"
 
 export async function initDB() {
   if (db) return db;
@@ -34,8 +35,16 @@ export async function initDB() {
         budgetStore.createIndex('by-category', 'categoryId');
         budgetStore.createIndex('by-period', 'period');
 
-        // Pre-populate with default categories
+        // Pre-populate with default categories - ensure "Sem Categoria" is ID 1
         const defaultCategories = [
+          { 
+            id: DEFAULT_CATEGORY_ID, 
+            name: 'Sem Categoria', 
+            color: '#888888', 
+            icon: 'help-circle', 
+            type: 'expense' as const, 
+            createdAt: new Date() 
+          },
           { name: 'Alimentação', color: '#00A86B', icon: 'utensils', type: 'expense' as const, createdAt: new Date() },
           { name: 'Transporte', color: '#1A73E8', icon: 'car', type: 'expense' as const, createdAt: new Date() },
           { name: 'Moradia', color: '#FFC107', icon: 'home', type: 'expense' as const, createdAt: new Date() },
@@ -46,7 +55,7 @@ export async function initDB() {
         ];
 
         for (const category of defaultCategories) {
-          categoryStore.add(category);
+          categoryStore.put(category); // Use put instead of add to respect the provided ID
         }
 
         // Add default account

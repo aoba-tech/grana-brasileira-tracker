@@ -1,6 +1,6 @@
 
 // Re-export the core functions
-export { initDB, getDB } from './core';
+export { initDB, getDB, DEFAULT_CATEGORY_ID } from './core';
 
 // Re-export category operations
 export { getCategories, addCategory, updateCategory, deleteCategory } from './categories';

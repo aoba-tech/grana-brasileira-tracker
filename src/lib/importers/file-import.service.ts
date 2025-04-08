@@ -60,7 +60,7 @@ export const FileImportService = {
       reader.onerror = (e) => {
         reject(new Error('Failed to read file'));
       };
-      reader.readAsText(file);
+      reader.readAsText(file, 'UTF-8');
     });
   },
   
@@ -79,34 +79,36 @@ export const FileImportService = {
       return content;
     }
     
-    // For common Latin encodings, handle conversion
+    // For special characters common in Portuguese
     try {
-      // Check for common encoding indicators in the content
-      const hasISO8859 = content.includes('ISO-8859') || 
-                          content.includes('LATIN1') || 
-                          declaredEncoding === 'ISO-8859-1';
-      
-      const hasWindows1252 = content.includes('WINDOWS-1252') || 
-                             declaredEncoding === 'WINDOWS-1252';
-      
-      // If detected as Latin1 or Windows-1252, attempt re-encoding via TextEncoder
-      if (hasISO8859 || hasWindows1252) {
-        // This is a simplified conversion that handles most common cases for these encodings
-        // It replaces special characters that might be encoding issues in OFX files
-        return content
-          .replace(/á|à|â|ã/g, 'a')
-          .replace(/é|è|ê/g, 'e')
-          .replace(/í|ì|î/g, 'i')
-          .replace(/ó|ò|ô|õ/g, 'o')
-          .replace(/ú|ù|û/g, 'u')
-          .replace(/ç/g, 'c')
-          .replace(/[^\x00-\x7F]/g, ''); // Remove any remaining non-ASCII characters
-      }
+      // Replace common encoding issues with proper UTF-8 characters
+      return content
+        .replace(/\xE3/g, 'ã')
+        .replace(/\xE1/g, 'á')
+        .replace(/\xE9/g, 'é')
+        .replace(/\xED/g, 'í')
+        .replace(/\xF3/g, 'ó')
+        .replace(/\xFA/g, 'ú')
+        .replace(/\xE7/g, 'ç')
+        .replace(/\xEA/g, 'ê')
+        .replace(/\xF4/g, 'ô')
+        .replace(/\xC3/g, 'Ã')
+        .replace(/\xC1/g, 'Á')
+        .replace(/\xC9/g, 'É')
+        .replace(/\xCD/g, 'Í')
+        .replace(/\xD3/g, 'Ó')
+        .replace(/\xDA/g, 'Ú')
+        .replace(/\xC7/g, 'Ç')
+        .replace(/\xCA/g, 'Ê')
+        .replace(/\xD4/g, 'Ô')
+        .replace(/\xE0/g, 'à')
+        .replace(/\xF9/g, 'ù')
+        .replace(/\xF5/g, 'õ')
+        .replace(/\xD5/g, 'Õ');
     } catch (error) {
       console.warn('Encoding conversion failed, using content as-is:', error);
     }
     
-    // Default fallback - return as-is if we couldn't convert
     return content;
   },
   

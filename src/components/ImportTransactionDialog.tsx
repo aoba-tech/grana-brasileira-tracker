@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { FileImportService } from '@/lib/importers/file-import.service';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { DEFAULT_CATEGORY_ID } from '@/lib/db/core';
 import {
   Dialog,
   DialogContent,
@@ -33,11 +34,18 @@ const ImportTransactionDialog: React.FC<ImportTransactionDialogProps> = ({
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(DEFAULT_CATEGORY_ID.toString());
   const [isImporting, setIsImporting] = useState(false);
   
   // Filter categories to only show expense categories as defaults for imports
   const expenseCategories = categories.filter(cat => cat.type === 'expense');
+  
+  // Initialize with default category
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedCategoryId(DEFAULT_CATEGORY_ID.toString());
+    }
+  }, [isOpen]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -80,7 +88,7 @@ const ImportTransactionDialog: React.FC<ImportTransactionDialogProps> = ({
   const resetForm = () => {
     setSelectedFile(null);
     setSelectedAccountId('');
-    setSelectedCategoryId('');
+    setSelectedCategoryId(DEFAULT_CATEGORY_ID.toString());
   };
   
   return (

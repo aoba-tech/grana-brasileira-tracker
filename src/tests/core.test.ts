@@ -52,6 +52,7 @@ describe('DB Core Functions', () => {
     const mockOpenDB = vi.fn();
     
     // Just verify the current version is retrieved correctly
+    const db = await getDB();
     const currentVersion = db?.version;
     expect(currentVersion).toBeGreaterThan(0);
   });
