@@ -23,6 +23,7 @@ import {
   Settings,
   HelpCircle,
   Info,
+  Tag,
 } from 'lucide-react';
 
 const AppSidebar = () => {
@@ -44,6 +45,11 @@ const AppSidebar = () => {
       name: 'Contas',
       path: '/accounts',
       icon: CreditCard,
+    },
+    {
+      name: 'Categorias',
+      path: '/categories',
+      icon: Tag,
     },
     {
       name: 'Orçamentos',

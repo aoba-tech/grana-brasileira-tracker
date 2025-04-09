@@ -12,6 +12,7 @@ import Accounts from "@/pages/Accounts";
 import Budgets from "@/pages/Budgets";
 import Reports from "@/pages/Reports";
 import Categories from "@/pages/Categories";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,14 @@ const App = () => (
               element={
                 <AppLayout>
                   <Reports />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <AppLayout>
+                  <Settings />
                 </AppLayout>
               }
             />

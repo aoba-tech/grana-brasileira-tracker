@@ -32,38 +32,59 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       }
       
       internalValueRef.current = initialValue;
-      setDisplayValue(initialValue === 0 ? '' : initialValue.toString().replace('.', ','));
+      
+      // Format initial value with Brazilian currency format
+      setDisplayValue(formatBrazilianCurrency(initialValue));
     }, [value, defaultValue]);
+
+    // Format value as Brazilian currency (R$ 0.000,00)
+    const formatBrazilianCurrency = (value: number): string => {
+      if (value === 0) return '';
+      
+      const formatter = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+      });
+      
+      return formatter.format(value);
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let input = e.target.value;
       
-      // Keep only digits, comma and dot
-      input = input.replace(/[^\d,.]/g, '');
+      // Remove currency symbol and non-numeric characters except comma
+      input = input.replace(/[R$\s.]/g, '');
       
-      // Handle when user types a comma or dot
+      // Keep only digits and comma
+      input = input.replace(/[^\d,]/g, '');
+      
+      // Handle when user types multiple commas
       if ((input.match(/,/g) || []).length > 1) {
         const parts = input.split(',');
         input = parts[0] + ',' + parts.slice(1).join('');
       }
       
-      if ((input.match(/\./g) || []).length > 0) {
-        // Convert dot to comma (Brazilian format)
-        input = input.replace(/\./g, ',');
-        
-        // Ensure only one comma
-        if ((input.match(/,/g) || []).length > 1) {
-          const parts = input.split(',');
-          input = parts[0] + ',' + parts.slice(1).join('');
-        }
-      }
-      
-      // Display the value without any formatting
-      setDisplayValue(input);
-      
       // Parse to number for storing
       const numericValue = parseCurrencyToNumber(input);
       internalValueRef.current = numericValue;
+      
+      // Format for display
+      if (input === '' || numericValue === 0) {
+        setDisplayValue('');
+      } else {
+        // Only format if we have actual numbers
+        if (/\d/.test(input)) {
+          // For partial inputs, don't add full formatting yet
+          if (input.endsWith(',') || (input.includes(',') && input.split(',')[1].length < 2)) {
+            setDisplayValue(`R$ ${input}`);
+          } else {
+            setDisplayValue(formatBrazilianCurrency(numericValue));
+          }
+        } else {
+          setDisplayValue(input); // Just the input for special cases
+        }
+      }
       
       // Call the onValueChange callback with the numeric value
       if (onValueChange) {
@@ -71,8 +92,22 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
       }
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      // If the field is empty on focus, show R$ prefix
+      if (!displayValue) {
+        setDisplayValue('R$ ');
+      }
+      
+      // Set cursor position after the prefix
+      setTimeout(() => {
+        if (e.target.value === 'R$ ') {
+          e.target.setSelectionRange(3, 3);
+        }
+      }, 0);
+    };
+
     const handleBlur = () => {
-      // On blur, ensure proper decimal format but add no currency symbol
+      // On blur, ensure proper currency format
       const value = internalValueRef.current;
       
       if (value === 0) {
@@ -80,26 +115,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         return;
       }
       
-      const formattedValue = value.toString().replace('.', ',');
-      
-      // If there's no decimal part, add it
-      if (!formattedValue.includes(',')) {
-        setDisplayValue(`${formattedValue},00`);
-      } else {
-        // Ensure proper decimal places
-        const [whole, decimal] = formattedValue.split(',');
-        if (decimal.length === 1) {
-          setDisplayValue(`${whole},${decimal}0`);
-        } else if (decimal.length > 2) {
-          setDisplayValue(`${whole},${decimal.substring(0, 2)}`);
-        } else {
-          setDisplayValue(formattedValue);
-        }
-      }
-    };
-
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      // Do nothing special on focus, keep the current display value
+      setDisplayValue(formatBrazilianCurrency(value));
     };
 
     return (
@@ -107,8 +123,8 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         className={cn('text-right', className)}
         value={displayValue}
         onChange={handleChange}
-        onBlur={handleBlur}
         onFocus={handleFocus}
+        onBlur={handleBlur}
         type="text"
         inputMode="decimal"
         ref={ref}
