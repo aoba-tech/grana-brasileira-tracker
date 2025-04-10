@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, forwardRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         style: 'currency',
         currency: 'BRL',
         minimumFractionDigits: 2,
+        maximumFractionDigits: 2
       });
       
       return formatter.format(value);
