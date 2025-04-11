@@ -2,6 +2,7 @@
 import React, { forwardRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { formatCurrencyRaw } from '@/lib/locale';
 
 interface CurrencyInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -10,14 +11,6 @@ interface CurrencyInputProps
 
 const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
   ({ className, onValueChange, value, ...props }, ref) => {
-    // Track formatted display value separately from actual numeric value
-    const [displayValue, setDisplayValue] = useState(() => {
-      if (value) {
-        return formatCurrency(Number(value));
-      }
-      return '';
-    });
-
     // Format number as Brazilian currency (with comma as decimal separator)
     const formatCurrency = (num: number): string => {
       return num.toLocaleString('pt-BR', {
@@ -25,6 +18,14 @@ const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         maximumFractionDigits: 2,
       });
     };
+
+    // Track formatted display value separately from actual numeric value
+    const [displayValue, setDisplayValue] = useState(() => {
+      if (value) {
+        return formatCurrency(Number(value));
+      }
+      return '';
+    });
 
     // Parse formatted string back to number
     const parseFormattedValue = (formatted: string): number => {
