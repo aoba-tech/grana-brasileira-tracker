@@ -5,6 +5,7 @@ import AppSidebar from '@/components/AppSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from './ThemeToggle';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -27,6 +28,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
                 </Button>
               )}
               <h1 className="text-xl font-bold">Pila</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
             </div>
           </nav>
           <main className="flex-1 overflow-y-auto py-4 px-4 md:px-6 lg:px-8">
