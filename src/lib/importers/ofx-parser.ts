@@ -37,9 +37,22 @@ export function parseOfxContent(content: string): OfxTransaction[] {
           date = new Date(year, month, day);
         }
         
-        // Extract description
-        const descMatch = transactionStr.match(/<MEMO>(.*?)<|<NAME>(.*?)</);
-        const description = descMatch ? (descMatch[1] || descMatch[2] || 'Unknown transaction') : 'Unknown transaction';
+        // Extract description combining NAME and MEMO when available
+        const nameMatch = transactionStr.match(/<NAME>([^<]*)/);
+        const memoMatch = transactionStr.match(/<MEMO>([^<]*)/);
+
+        const name = nameMatch?.[1]?.trim() || '';
+        const memo = memoMatch?.[1]?.trim() || '';
+
+        let description = 'Unknown transaction';
+
+        if (name && memo) {
+          description = `${name} - ${memo}`;
+        } else if (name) {
+          description = name;
+        } else if (memo) {
+          description = memo;
+        }
         
         // Determine transaction type (expense or income)
         const type = amount < 0 ? 'expense' : 'income';
