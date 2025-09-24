@@ -1,30 +1,78 @@
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
+import { Transaction } from '@/lib/db/schema';
+
+type TransactionTypeFilter = 'all' | 'income' | 'expense';
 
 export const useTransactionPage = () => {
-  const { 
-    transactions, 
-    categories, 
+  const {
+    transactions,
+    categories,
+    accounts,
     deleteTransaction
   } = useFinance();
   
   // State for UI controls
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Filter transactions based on search term
-  const filteredTransactions = transactions.filter(transaction => 
-    transaction.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const [selectedAccountIds, setSelectedAccountIds] = useState<number[]>([]);
+  const [transactionType, setTransactionType] =
+    useState<TransactionTypeFilter>('all');
+
+  const filteredTransactions = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return transactions
+      .filter(transaction => {
+        if (!normalizedSearch) return true;
+        const haystack = `${transaction.description} ${transaction.notes ?? ''}`
+          .toLowerCase()
+          .trim();
+        return haystack.includes(normalizedSearch);
+      })
+      .filter(transaction => {
+        if (selectedAccountIds.length === 0) return true;
+        return selectedAccountIds.includes(transaction.accountId);
+      })
+      .filter(transaction => {
+        if (transactionType === 'all') return true;
+        return transaction.type === transactionType;
+      });
+  }, [transactions, searchTerm, selectedAccountIds, transactionType]);
+
+  const sortedTransactions = useMemo(
+    () =>
+      [...filteredTransactions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      ),
+    [filteredTransactions]
   );
-  
-  // Sort transactions by date (newest first)
-  const sortedTransactions = [...filteredTransactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  
+
+  const handleAccountSelectionChange = (accountId: number, isSelected: boolean) => {
+    setSelectedAccountIds(prevSelected => {
+      if (isSelected) {
+        if (prevSelected.includes(accountId)) {
+          return prevSelected;
+        }
+
+        return [...prevSelected, accountId];
+      }
+
+      return prevSelected.filter(id => id !== accountId);
+    });
+  };
+
+  const clearAccountSelection = () => {
+    setSelectedAccountIds([]);
+  };
+
+  const handleTransactionTypeChange = (type: TransactionTypeFilter) => {
+    setTransactionType(type);
+  };
+
   // Open dialog in add mode
   const handleAddClick = () => {
     setEditingTransaction(null);
@@ -55,6 +103,7 @@ export const useTransactionPage = () => {
 
   return {
     categories,
+    accounts,
     sortedTransactions,
     isTransactionFormOpen,
     setIsTransactionFormOpen,
@@ -63,6 +112,11 @@ export const useTransactionPage = () => {
     editingTransaction,
     searchTerm,
     setSearchTerm,
+    transactionType,
+    handleTransactionTypeChange,
+    selectedAccountIds,
+    handleAccountSelectionChange,
+    clearAccountSelection,
     handleAddClick,
     handleEditClick,
     handleDelete,
