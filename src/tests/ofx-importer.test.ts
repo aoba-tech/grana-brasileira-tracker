@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { parseOfxContent, convertOfxToTransaction } from '@/lib/importers/ofx-parser';
 import * as OfxParserModule from '@/lib/importers/ofx-parser';
+import * as DbModule from '@/lib/db';
 import { FileImportService } from '@/lib/importers/file-import.service';
 
 describe('OFX Parser', () => {
@@ -118,6 +119,23 @@ describe('OFX Parser', () => {
       })
     );
   });
+
+  it('should throw when converting a transaction without a valid account', () => {
+    const ofxTransaction = {
+      amount: 50,
+      date: new Date(2023, 4, 1),
+      description: 'Invalid Account Transaction',
+      type: 'income' as const,
+    };
+
+    expect(() => convertOfxToTransaction(ofxTransaction, 0, 2)).toThrow(
+      'OFX transactions must be associated with a valid account.'
+    );
+
+    expect(() => convertOfxToTransaction(ofxTransaction, NaN as any, 2)).toThrow(
+      'OFX transactions must be associated with a valid account.'
+    );
+  });
 });
 
 describe('FileImportService', () => {
@@ -166,31 +184,56 @@ describe('FileImportService', () => {
     await expect(FileImportService.readFileContent(mockFile)).rejects.toThrow('Failed to read file');
   });
   
-  it('should import OFX file and process transactions', async () => {
-    // Mock dependencies and functions
+  it('should import OFX file and persist transactions with the selected account', async () => {
     const mockOfxContent = '<OFX><STMTTRN><TRNAMT>-10.00</TRNAMT><DTPOSTED>20230501</DTPOSTED><MEMO>Test</MEMO></STMTTRN></OFX>';
-    const mockTransaction = { amount: 10, date: new Date(), description: 'Test', type: 'expense' as const };
-    
-    // Mock methods
-    FileImportService.readFileContent = vi.fn().mockResolvedValue(mockOfxContent);
-    const mockImportTransactions = vi.fn().mockResolvedValue({ success: true, count: 1, errors: [] });
-    FileImportService.importTransactions = mockImportTransactions;
-    
-    const parseSpy = vi.spyOn(OfxParserModule, 'parseOfxContent').mockReturnValue([mockTransaction]);
-    const convertSpy = vi.spyOn(OfxParserModule, 'convertOfxToTransaction').mockReturnValue({} as any);
-    
+    const parsedTransaction: OfxParserModule.OfxTransaction = {
+      amount: 10,
+      date: new Date('2023-05-01'),
+      description: 'Test',
+      type: 'expense',
+    };
+    const convertedTransaction = {
+      description: 'Test',
+      amount: 10,
+      type: 'expense' as const,
+      date: parsedTransaction.date,
+      categoryId: 2,
+      accountId: 1,
+      notes: 'Imported from OFX/OFC file',
+      createdAt: new Date('2023-05-02T00:00:00Z'),
+    };
+
+    const readSpy = vi.spyOn(FileImportService, 'readFileContent').mockResolvedValue(mockOfxContent);
+    const encodingSpy = vi
+      .spyOn(FileImportService, 'ensureUtf8Encoding')
+      .mockResolvedValue(mockOfxContent);
+    const parseSpy = vi.spyOn(OfxParserModule, 'parseOfxContent').mockReturnValue([parsedTransaction]);
+    const convertSpy = vi
+      .spyOn(OfxParserModule, 'convertOfxToTransaction')
+      .mockReturnValue(convertedTransaction as any);
+    const addTransactionSpy = vi
+      .spyOn(DbModule, 'addTransaction')
+      .mockResolvedValue(1 as any);
+
     const mockFile = new File([''], 'test.ofx', { type: 'text/xml' });
     const accountId = 1;
     const categoryId = 2;
-    
+
     const result = await FileImportService.importOfxFile(mockFile, accountId, categoryId);
-    
-    expect(FileImportService.readFileContent).toHaveBeenCalledWith(mockFile);
+
+    expect(readSpy).toHaveBeenCalledWith(mockFile);
+    expect(encodingSpy).toHaveBeenCalledWith(mockOfxContent);
     expect(parseSpy).toHaveBeenCalledWith(mockOfxContent);
-    expect(mockImportTransactions).toHaveBeenCalledWith([mockTransaction], accountId, categoryId);
+    expect(convertSpy).toHaveBeenCalledWith(parsedTransaction, accountId, categoryId);
+    expect(addTransactionSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ accountId })
+    );
     expect(result).toEqual({ success: true, count: 1, errors: [] });
 
+    readSpy.mockRestore();
+    encodingSpy.mockRestore();
     parseSpy.mockRestore();
     convertSpy.mockRestore();
+    addTransactionSpy.mockRestore();
   });
 });

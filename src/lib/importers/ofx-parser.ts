@@ -86,6 +86,10 @@ export function convertOfxToTransaction(
   accountId: number,
   defaultCategoryId: number
 ): Omit<Transaction, 'id'> {
+  if (!Number.isInteger(accountId) || accountId <= 0) {
+    throw new Error('OFX transactions must be associated with a valid account.');
+  }
+
   return {
     description: ofxTransaction.description,
     amount: ofxTransaction.amount,

@@ -10,6 +10,7 @@ import { useTransactionPage } from '@/hooks/useTransactionPage';
 const Transactions = () => {
   const {
     categories,
+    accounts,
     sortedTransactions,
     isTransactionFormOpen,
     setIsTransactionFormOpen,
@@ -18,6 +19,11 @@ const Transactions = () => {
     editingTransaction,
     searchTerm,
     setSearchTerm,
+    transactionType,
+    handleTransactionTypeChange,
+    selectedAccountIds,
+    handleAccountSelectionChange,
+    clearAccountSelection,
     handleAddClick,
     handleEditClick,
     handleDelete,
@@ -31,12 +37,18 @@ const Transactions = () => {
         onImportClick={handleImportClick} 
       />
       
-      <TransactionFilters 
+      <TransactionFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
+        transactionType={transactionType}
+        onTransactionTypeChange={handleTransactionTypeChange}
+        accounts={accounts}
+        selectedAccountIds={selectedAccountIds}
+        onAccountSelectionChange={handleAccountSelectionChange}
+        onClearAccountFilters={clearAccountSelection}
       />
-      
-      <TransactionTable 
+
+      <TransactionTable
         transactions={sortedTransactions}
         categories={categories}
         onEdit={handleEditClick}
