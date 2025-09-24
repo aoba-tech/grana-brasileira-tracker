@@ -1,6 +1,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { parseOfxContent, convertOfxToTransaction } from '@/lib/importers/ofx-parser';
+import * as OfxParserModule from '@/lib/importers/ofx-parser';
 import { FileImportService } from '@/lib/importers/file-import.service';
 
 describe('OFX Parser', () => {
@@ -15,13 +16,15 @@ describe('OFX Parser', () => {
                   <TRNTYPE>DEBIT</TRNTYPE>
                   <DTPOSTED>20230501</DTPOSTED>
                   <TRNAMT>-50.00</TRNAMT>
-                  <MEMO>Coffee Shop</MEMO>
+                  <NAME>Coffee Shop</NAME>
+                  <MEMO>Morning Latte</MEMO>
                 </STMTTRN>
                 <STMTTRN>
                   <TRNTYPE>CREDIT</TRNTYPE>
                   <DTPOSTED>20230502</DTPOSTED>
                   <TRNAMT>2000.00</TRNAMT>
                   <NAME>Salary</NAME>
+                  <MEMO>Monthly Payment</MEMO>
                 </STMTTRN>
               </BANKTRANLIST>
             </STMTRS>
@@ -36,14 +39,14 @@ describe('OFX Parser', () => {
     expect(result[0]).toEqual(
       expect.objectContaining({
         amount: 50,
-        description: 'Coffee Shop',
+        description: 'Coffee Shop - Morning Latte',
         type: 'expense',
       })
     );
     expect(result[1]).toEqual(
       expect.objectContaining({
         amount: 2000,
-        description: 'Salary',
+        description: 'Salary - Monthly Payment',
         type: 'income',
       })
     );
@@ -55,6 +58,39 @@ describe('OFX Parser', () => {
 
     const invalidContent = '<OFX><INVALID>bad data</INVALID></OFX>';
     expect(parseOfxContent(invalidContent)).toEqual([]);
+  });
+
+  it('should fallback to single field when only NAME or MEMO is provided', () => {
+    const ofxContent = `
+      <OFX>
+        <BANKMSGSRSV1>
+          <STMTTRNRS>
+            <STMTRS>
+              <BANKTRANLIST>
+                <STMTTRN>
+                  <TRNTYPE>DEBIT</TRNTYPE>
+                  <DTPOSTED>20230503</DTPOSTED>
+                  <TRNAMT>-20.00</TRNAMT>
+                  <NAME>Grocery Store</NAME>
+                </STMTTRN>
+                <STMTTRN>
+                  <TRNTYPE>DEBIT</TRNTYPE>
+                  <DTPOSTED>20230504</DTPOSTED>
+                  <TRNAMT>-15.00</TRNAMT>
+                  <MEMO>Online Subscription</MEMO>
+                </STMTTRN>
+              </BANKTRANLIST>
+            </STMTRS>
+          </STMTTRNRS>
+        </BANKMSGSRSV1>
+      </OFX>
+    `;
+
+    const result = parseOfxContent(ofxContent);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].description).toBe('Grocery Store');
+    expect(result[1].description).toBe('Online Subscription');
   });
 
   it('should convert OFX transaction to app transaction format', () => {
@@ -89,6 +125,10 @@ describe('FileImportService', () => {
     vi.resetAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('should read file content', async () => {
     const mockFileContent = '<OFX>test content</OFX>';
     const mockFile = new File([mockFileContent], 'test.ofx', { type: 'text/xml' });
@@ -106,7 +146,7 @@ describe('FileImportService', () => {
     
     const result = await FileImportService.readFileContent(mockFile);
     expect(result).toBe(mockFileContent);
-    expect(mockFileReader.readAsText).toHaveBeenCalledWith(mockFile);
+    expect(mockFileReader.readAsText).toHaveBeenCalledWith(mockFile, 'UTF-8');
   });
 
   it('should handle file read errors', async () => {
@@ -136,11 +176,8 @@ describe('FileImportService', () => {
     const mockImportTransactions = vi.fn().mockResolvedValue({ success: true, count: 1, errors: [] });
     FileImportService.importTransactions = mockImportTransactions;
     
-    // Create stub for parseOfxContent
-    vi.mock('@/lib/importers/ofx-parser', () => ({
-      parseOfxContent: vi.fn().mockReturnValue([mockTransaction]),
-      convertOfxToTransaction: vi.fn().mockReturnValue({})
-    }));
+    const parseSpy = vi.spyOn(OfxParserModule, 'parseOfxContent').mockReturnValue([mockTransaction]);
+    const convertSpy = vi.spyOn(OfxParserModule, 'convertOfxToTransaction').mockReturnValue({} as any);
     
     const mockFile = new File([''], 'test.ofx', { type: 'text/xml' });
     const accountId = 1;
@@ -149,7 +186,11 @@ describe('FileImportService', () => {
     const result = await FileImportService.importOfxFile(mockFile, accountId, categoryId);
     
     expect(FileImportService.readFileContent).toHaveBeenCalledWith(mockFile);
+    expect(parseSpy).toHaveBeenCalledWith(mockOfxContent);
     expect(mockImportTransactions).toHaveBeenCalledWith([mockTransaction], accountId, categoryId);
     expect(result).toEqual({ success: true, count: 1, errors: [] });
+
+    parseSpy.mockRestore();
+    convertSpy.mockRestore();
   });
 });
