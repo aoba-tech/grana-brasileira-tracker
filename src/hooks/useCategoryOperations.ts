@@ -1,11 +1,12 @@
 
-import { 
+import {
   addCategory, updateCategory, deleteCategory
 } from '@/lib/db';
 import { toast } from '@/lib/toast';
+import { Category } from '@/lib/db/schema';
 
 export const useCategoryOperations = (refreshData: () => Promise<void>) => {
-  const addCategoryWithUpdate = async (category: any) => {
+  const addCategoryWithUpdate = async (category: Omit<Category, 'id'>) => {
     try {
       const id = await addCategory(category);
       await refreshData();
@@ -18,7 +19,7 @@ export const useCategoryOperations = (refreshData: () => Promise<void>) => {
     }
   };
 
-  const updateCategoryWithUpdate = async (category: any) => {
+  const updateCategoryWithUpdate = async (category: Category) => {
     try {
       const id = await updateCategory(category);
       await refreshData();

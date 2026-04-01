@@ -5,38 +5,39 @@ import { useTransactionOperations } from '@/hooks/useTransactionOperations';
 import { useCategoryOperations } from '@/hooks/useCategoryOperations';
 import { useAccountOperations } from '@/hooks/useAccountOperations';
 import { useBudgetOperations } from '@/hooks/useBudgetOperations';
+import { Category, Transaction, Account, Budget, BudgetStatus } from '@/lib/db/schema';
 
 type FinanceContextType = {
-  categories: any[];
-  transactions: any[];
-  accounts: any[];
-  budgets: any[];
+  categories: Category[];
+  transactions: Transaction[];
+  accounts: Account[];
+  budgets: Budget[];
   loading: boolean;
   expensesByCategory: Record<string, number>;
   totalBalance: number;
-  budgetStatus: any[];
+  budgetStatus: BudgetStatus[];
   currentMonth: Date;
-  
-  addTransaction: (transaction: any) => Promise<number>;
-  updateTransaction: (transaction: any) => Promise<number>;
+
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<number>;
+  updateTransaction: (transaction: Transaction) => Promise<number>;
   deleteTransaction: (id: number) => Promise<void>;
-  
-  addCategory: (category: any) => Promise<number>;
-  updateCategory: (category: any) => Promise<number>;
+
+  addCategory: (category: Omit<Category, 'id'>) => Promise<number>;
+  updateCategory: (category: Category) => Promise<number>;
   deleteCategory: (id: number) => Promise<void>;
-  
-  addAccount: (account: any) => Promise<number>;
-  updateAccount: (account: any) => Promise<number>;
+
+  addAccount: (account: Omit<Account, 'id'>) => Promise<number>;
+  updateAccount: (account: Account) => Promise<number>;
   deleteAccount: (id: number) => Promise<void>;
-  
-  addBudget: (budget: any) => Promise<number>;
-  updateBudget: (budget: any) => Promise<number>;
+
+  addBudget: (budget: Omit<Budget, 'id'>) => Promise<number>;
+  updateBudget: (budget: Budget) => Promise<number>;
   deleteBudget: (id: number) => Promise<void>;
-  
+
   setCurrentMonth: (date: Date) => void;
   refreshData: () => Promise<void>;
-  monthlyExpenses: any[];
-  monthlyIncome: any[];
+  monthlyExpenses: Transaction[];
+  monthlyIncome: Transaction[];
 };
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);

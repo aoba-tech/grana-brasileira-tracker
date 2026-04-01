@@ -1,24 +1,25 @@
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   initDB, getCategories, getTransactions, getAccounts, getBudgets,
   getExpensesByCategory, getTotalBalance, getBudgetStatus,
   getMonthlyExpenses, getMonthlyIncome
 } from '@/lib/db';
 import { toast } from '@/lib/toast';
+import { Category, Transaction, Account, Budget, BudgetStatus } from '@/lib/db/schema';
 
 export const useFinanceData = () => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [budgets, setBudgets] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [loading, setLoading] = useState(true);
   const [expensesByCategory, setExpensesByCategory] = useState<Record<string, number>>({});
   const [totalBalance, setTotalBalance] = useState(0);
-  const [budgetStatus, setBudgetStatus] = useState<any[]>([]);
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [monthlyExpenses, setMonthlyExpenses] = useState<any[]>([]);
-  const [monthlyIncome, setMonthlyIncome] = useState<any[]>([]);
+  const [monthlyExpenses, setMonthlyExpenses] = useState<Transaction[]>([]);
+  const [monthlyIncome, setMonthlyIncome] = useState<Transaction[]>([]);
 
   useEffect(() => {
     const initialize = async () => {
