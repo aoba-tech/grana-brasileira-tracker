@@ -10,19 +10,29 @@ import { Wallet, TrendingUp, TrendingDown, Plus, DollarSign, BanknoteIcon, Arrow
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { addMonths, subMonths } from 'date-fns';
 import TransactionForm from '@/components/TransactionForm';
+import { useNavigate } from 'react-router-dom';
+
+const tooltipStyle = {
+  backgroundColor: 'hsl(var(--background))',
+  borderRadius: '8px',
+  border: '1px solid hsl(var(--border))',
+  color: 'hsl(var(--foreground))',
+};
 
 const Dashboard = () => {
-  const { 
-    totalBalance, 
-    monthlyExpenses, 
-    monthlyIncome, 
-    currentMonth, 
+  const {
+    totalBalance,
+    monthlyExpenses,
+    monthlyIncome,
+    currentMonth,
     setCurrentMonth,
     expensesByCategory,
     budgetStatus,
     categories
   } = useFinance();
-  
+
+  const navigate = useNavigate();
+
   // Add state for transaction dialog
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   
@@ -137,7 +147,7 @@ const Dashboard = () => {
                         </Pie>
                         <Tooltip 
                           formatter={(value: number) => formatCurrency(value)} 
-                          contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                          contentStyle={tooltipStyle}
                         />
                         <Legend />
                       </PieChart>
@@ -219,7 +229,7 @@ const Dashboard = () => {
                     <p className="text-muted-foreground mt-2">
                       Crie orçamentos para categorias de despesas para acompanhar seus gastos.
                     </p>
-                    <Button className="mt-4">
+                    <Button className="mt-4" onClick={() => navigate('/budgets')}>
                       <Plus className="mr-2 h-4 w-4" />
                       Criar Orçamento
                     </Button>
@@ -256,7 +266,7 @@ const Dashboard = () => {
                       />
                       <Tooltip
                         formatter={(value: number) => formatCurrency(value)}
-                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        contentStyle={tooltipStyle}
                       />
                       <Bar dataKey="value" fill="#00A86B" />
                     </BarChart>

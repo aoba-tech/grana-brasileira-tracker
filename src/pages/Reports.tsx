@@ -1,6 +1,14 @@
 
 import React, { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
+
+const tooltipStyle = {
+  backgroundColor: 'hsl(var(--background))',
+  borderRadius: '8px',
+  border: '1px solid hsl(var(--border))',
+  color: 'hsl(var(--foreground))',
+};
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency, formatMonth } from '@/lib/locale';
@@ -180,7 +188,7 @@ const Reports = () => {
                           </Pie>
                           <Tooltip 
                             formatter={(value: number) => formatCurrency(value)} 
-                            contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            contentStyle={tooltipStyle}
                           />
                           <Legend />
                         </PieChart>
@@ -217,7 +225,7 @@ const Reports = () => {
                           <YAxis dataKey="name" type="category" width={80} />
                           <Tooltip 
                             formatter={(value: number) => formatCurrency(value)} 
-                            contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                            contentStyle={tooltipStyle}
                           />
                           <Bar dataKey="value" fill="#E53935" />
                         </BarChart>
@@ -271,7 +279,7 @@ const Reports = () => {
                       />
                       <Tooltip 
                         formatter={(value: number) => formatCurrency(value)} 
-                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        contentStyle={tooltipStyle}
                       />
                       <Bar dataKey="value" fill="#00A86B">
                         {categories
@@ -312,7 +320,7 @@ const Reports = () => {
                       />
                       <Tooltip 
                         formatter={(value: number) => formatCurrency(value)} 
-                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        contentStyle={tooltipStyle}
                       />
                       <Legend />
                       <Line 
