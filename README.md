@@ -1,4 +1,14 @@
-# Welcome to your Lovable project
+# Pila — controle financeiro pessoal
+
+Aplicação web offline-first para administrar contas, transações, categorias e
+orçamentos. Os dados são mantidos localmente no navegador com IndexedDB.
+
+## Documentação
+
+A documentação para desenvolvimento e continuidade do projeto está em
+[`docs/`](./docs/README.md). Comece pelo
+[`guia de continuidade`](./docs/HANDOFF.md) para retomar o trabalho no Codex
+Desktop.
 
 ## Project info
 
