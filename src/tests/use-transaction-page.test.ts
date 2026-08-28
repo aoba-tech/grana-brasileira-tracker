@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { useTransactionPage } from '@/hooks/useTransactionPage';
 import { useFinance } from '@/context/FinanceContext';
 

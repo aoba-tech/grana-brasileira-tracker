@@ -1,20 +1,21 @@
 
 import { formatISO } from 'date-fns';
-import { 
+import {
   addTransaction, updateTransaction, deleteTransaction
 } from '@/lib/db';
 import { toast } from '@/lib/toast';
+import { Transaction } from '@/lib/db/schema';
 
 export const useTransactionOperations = (refreshData: () => Promise<void>) => {
-  const addTransactionWithUpdate = async (transaction: any) => {
+  const addTransactionWithUpdate = async (transaction: Omit<Transaction, 'id'>) => {
     try {
       const formattedTransaction = {
         ...transaction,
-        date: transaction.date instanceof Date 
-          ? formatISO(transaction.date) 
+        date: transaction.date instanceof Date
+          ? formatISO(transaction.date)
           : transaction.date
       };
-      
+
       const id = await addTransaction(formattedTransaction);
       await refreshData();
       toast.success('Transação adicionada com sucesso');
@@ -26,12 +27,12 @@ export const useTransactionOperations = (refreshData: () => Promise<void>) => {
     }
   };
 
-  const updateTransactionWithUpdate = async (transaction: any) => {
+  const updateTransactionWithUpdate = async (transaction: Transaction) => {
     try {
       const formattedTransaction = {
         ...transaction,
-        date: transaction.date instanceof Date 
-          ? formatISO(transaction.date) 
+        date: transaction.date instanceof Date
+          ? formatISO(transaction.date)
           : transaction.date
       };
       

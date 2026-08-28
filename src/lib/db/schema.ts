@@ -63,3 +63,8 @@ export type Category = FinanceDB['categories']['value'];
 export type Transaction = FinanceDB['transactions']['value'];
 export type Account = FinanceDB['accounts']['value'];
 export type Budget = FinanceDB['budgets']['value'];
+
+export type BudgetStatus = Budget & {
+  category: Category | undefined;
+  percentage: number;
+};

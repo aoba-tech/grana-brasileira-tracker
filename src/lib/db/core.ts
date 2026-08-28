@@ -85,3 +85,10 @@ export async function getDB() {
   }
   return db;
 }
+
+export function resetDB() {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}

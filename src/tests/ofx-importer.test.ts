@@ -147,41 +147,46 @@ describe('FileImportService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should read file content', async () => {
-    const mockFileContent = '<OFX>test content</OFX>';
+  it('should read UTF-8 file content correctly', async () => {
+    const mockFileContent = '<OFX>conteúdo com acentos: ção</OFX>';
     const mockFile = new File([mockFileContent], 'test.ofx', { type: 'text/xml' });
-    
-    // Mock FileReader
-    const mockFileReader = {
-      onload: null as any,
-      onerror: null as any,
-      readAsText: vi.fn().mockImplementation(function() {
-        this.onload({ target: { result: mockFileContent } });
-      }),
-    };
-    
-    global.FileReader = vi.fn(() => mockFileReader) as any;
-    
+
     const result = await FileImportService.readFileContent(mockFile);
     expect(result).toBe(mockFileContent);
-    expect(mockFileReader.readAsText).toHaveBeenCalledWith(mockFile, 'UTF-8');
   });
 
-  it('should handle file read errors', async () => {
-    const mockFile = new File([''], 'test.ofx', { type: 'text/xml' });
-    
-    // Mock FileReader with error
-    const mockFileReader = {
-      onload: null as any,
-      onerror: null as any,
-      readAsText: vi.fn().mockImplementation(function() {
-        this.onerror(new Error('File read error'));
-      }),
-    };
-    
-    global.FileReader = vi.fn(() => mockFileReader) as any;
-    
-    await expect(FileImportService.readFileContent(mockFile)).rejects.toThrow('Failed to read file');
+  it('should read ISO-8859-1 file content and convert to UTF-8', async () => {
+    // Build a buffer with the ISO-8859-1 byte sequence for "Pagamento"
+    // followed by a byte that is 0xE7 (ç in ISO-8859-1)
+    const header = 'CHARSET:ISO-8859-1\n';
+    const headerBytes = new TextEncoder().encode(header);
+    // "Pagamento" in ASCII + ç (0xE7 in ISO-8859-1)
+    const bodyBytes = new Uint8Array([0x50, 0x61, 0x67, 0x61, 0x6D, 0x65, 0x6E, 0x74, 0x6F, 0xE7]);
+    const combined = new Uint8Array(headerBytes.length + bodyBytes.length);
+    combined.set(headerBytes, 0);
+    combined.set(bodyBytes, headerBytes.length);
+
+    const mockFile = new File([combined], 'test.ofx', { type: 'text/xml' });
+    const result = await FileImportService.readFileContent(mockFile);
+
+    expect(result).toContain('CHARSET:ISO-8859-1');
+    expect(result).toContain('Pagamentoç');
+  });
+
+  it('should handle file read errors from arrayBuffer', async () => {
+    const mockFile = {
+      arrayBuffer: vi.fn().mockRejectedValue(new Error('disk error'))
+    } as unknown as File;
+
+    await expect(FileImportService.readFileContent(mockFile)).rejects.toThrow('disk error');
+  });
+
+  it('should detect encoding from OFX headers', () => {
+    expect(FileImportService.detectOfxEncoding('CHARSET:1252\n')).toBe('windows-1252');
+    expect(FileImportService.detectOfxEncoding('CHARSET:ISO-8859-1\n')).toBe('iso-8859-1');
+    expect(FileImportService.detectOfxEncoding('CHARSET:UTF-8\n')).toBe('utf-8');
+    expect(FileImportService.detectOfxEncoding('<?xml version="1.0" encoding="iso-8859-1"?>')).toBe('iso-8859-1');
+    expect(FileImportService.detectOfxEncoding('<OFX>')).toBe('utf-8');
   });
   
   it('should import OFX file and persist transactions with the selected account', async () => {

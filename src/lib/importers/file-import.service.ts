@@ -47,84 +47,46 @@ export const FileImportService = {
   },
   
   /**
-   * Read a file's content as string
-   * @param file The file to read
-   * @returns Promise with the file content
+   * Read a file's content as a UTF-8 string, detecting and honouring the
+   * encoding declared in the OFX/SGML header.
+   * Brazilian bank OFX files are often Windows-1252 or ISO-8859-1.
+   * Reading the raw bytes first and decoding with the correct charset preserves accented characters.
    */
   async readFileContent(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        resolve(e.target?.result as string || '');
-      };
-      reader.onerror = (e) => {
-        reject(new Error('Failed to read file'));
-      };
-      reader.readAsText(file, 'UTF-8');
-    });
+    const buffer = await file.arrayBuffer();
+
+    // Peek at the first 512 bytes using latin-1 (lossless for any byte value) to read the header
+    const preview = new TextDecoder('iso-8859-1').decode(buffer.slice(0, 512));
+    const encoding = this.detectOfxEncoding(preview);
+
+    return new TextDecoder(encoding).decode(buffer);
   },
-  
+
   /**
-   * Ensure content is in UTF-8 encoding
-   * @param content The content to convert
-   * @returns String in UTF-8 encoding
+   * Detect the text encoding declared in the OFX/SGML header.
+   * Returns a label accepted by TextDecoder (e.g. 'utf-8', 'windows-1252').
+   */
+  detectOfxEncoding(preview: string): string {
+    // XML-style OFX: <?xml version="1.0" encoding="iso-8859-1"?>
+    const xmlMatch = preview.match(/encoding=["']([^"']+)["']/i);
+    if (xmlMatch) return xmlMatch[1].toLowerCase();
+
+    // SGML flat header: CHARSET:1252  or  CHARSET:ISO-8859-1
+    const charsetMatch = preview.match(/CHARSET[=:]([^\s<>\r\n]+)/i);
+    if (charsetMatch) {
+      const val = charsetMatch[1].trim().toUpperCase();
+      if (val === '1252' || val === 'WINDOWS-1252') return 'windows-1252';
+      if (val.startsWith('ISO-8859') || val.startsWith('ISO8859')) return 'iso-8859-1';
+      if (val === 'UTF-8' || val === 'UTF8') return 'utf-8';
+    }
+
+    return 'utf-8';
+  },
+
+  /**
+   * No-op kept for API compatibility — encoding is now handled in readFileContent.
    */
   async ensureUtf8Encoding(content: string): Promise<string> {
-    // Check for encoding declarations in the OFX header
-    const encodingMatch = content.match(/ENCODING="([^"]+)"/i);
-    const charsetMatch = content.match(/CHARSET="([^"]+)"/i);
-    
-    const declaredEncoding = encodingMatch ? encodingMatch[1].toUpperCase() : null;
-    const declaredCharset = charsetMatch ? charsetMatch[1].toUpperCase() : null;
-    
-    // If it's already UTF-8 or no encoding is specified, return as-is
-    if ((!declaredEncoding && !declaredCharset) || 
-        declaredEncoding === 'UTF-8' || 
-        declaredCharset === 'UTF-8') {
-      return content;
-    }
-    
-    console.log(`OFX file has encoding: ${declaredEncoding}, charset: ${declaredCharset}`);
-    
-    // For special characters common in Portuguese
-    try {
-      // Replace common encoding issues with proper UTF-8 characters
-      return content
-        .replace(/\xE3/g, 'ã')
-        .replace(/\xE1/g, 'á')
-        .replace(/\xE9/g, 'é')
-        .replace(/\xED/g, 'í')
-        .replace(/\xF3/g, 'ó')
-        .replace(/\xFA/g, 'ú')
-        .replace(/\xE7/g, 'ç')
-        .replace(/\xEA/g, 'ê')
-        .replace(/\xF4/g, 'ô')
-        .replace(/\xC3/g, 'Ã')
-        .replace(/\xC1/g, 'Á')
-        .replace(/\xC9/g, 'É')
-        .replace(/\xCD/g, 'Í')
-        .replace(/\xD3/g, 'Ó')
-        .replace(/\xDA/g, 'Ú')
-        .replace(/\xC7/g, 'Ç')
-        .replace(/\xCA/g, 'Ê')
-        .replace(/\xD4/g, 'Ô')
-        .replace(/\xE0/g, 'à')
-        .replace(/\xF9/g, 'ù')
-        .replace(/\xF5/g, 'õ')
-        .replace(/\xD5/g, 'Õ')
-        // ISO-8859-1 specific mappings for other common characters
-        .replace(/\xE2/g, 'â')
-        .replace(/\xC2/g, 'Â')
-        .replace(/\xEE/g, 'î')
-        .replace(/\xCE/g, 'Î')
-        .replace(/\xF2/g, 'ò')
-        .replace(/\xD2/g, 'Ò')
-        .replace(/\xFC/g, 'ü')
-        .replace(/\xDC/g, 'Ü');
-    } catch (error) {
-      console.warn('Encoding conversion failed, using content as-is:', error);
-    }
-    
     return content;
   },
   

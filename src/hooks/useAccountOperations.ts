@@ -1,11 +1,12 @@
 
-import { 
+import {
   addAccount, updateAccount, deleteAccount
 } from '@/lib/db';
 import { toast } from '@/lib/toast';
+import { Account } from '@/lib/db/schema';
 
 export const useAccountOperations = (refreshData: () => Promise<void>) => {
-  const addAccountWithUpdate = async (account: any) => {
+  const addAccountWithUpdate = async (account: Omit<Account, 'id'>) => {
     try {
       const id = await addAccount(account);
       await refreshData();
@@ -18,7 +19,7 @@ export const useAccountOperations = (refreshData: () => Promise<void>) => {
     }
   };
 
-  const updateAccountWithUpdate = async (account: any) => {
+  const updateAccountWithUpdate = async (account: Account) => {
     try {
       const id = await updateAccount(account);
       await refreshData();

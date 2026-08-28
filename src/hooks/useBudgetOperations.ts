@@ -1,11 +1,12 @@
 
-import { 
+import {
   addBudget, updateBudget, deleteBudget
 } from '@/lib/db';
 import { toast } from '@/lib/toast';
+import { Budget } from '@/lib/db/schema';
 
 export const useBudgetOperations = (refreshData: () => Promise<void>) => {
-  const addBudgetWithUpdate = async (budget: any) => {
+  const addBudgetWithUpdate = async (budget: Omit<Budget, 'id'>) => {
     try {
       const id = await addBudget(budget);
       await refreshData();
@@ -18,7 +19,7 @@ export const useBudgetOperations = (refreshData: () => Promise<void>) => {
     }
   };
 
-  const updateBudgetWithUpdate = async (budget: any) => {
+  const updateBudgetWithUpdate = async (budget: Budget) => {
     try {
       const id = await updateBudget(budget);
       await refreshData();
